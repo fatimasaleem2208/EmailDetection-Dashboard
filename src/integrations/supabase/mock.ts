@@ -378,7 +378,7 @@ export function ensureUserSeeded(userInfo: {
     user_id: userId,
     role: "assistant",
     content:
-      "Welcome to the **PhishGuard AI SOC Assistant**. Ask me about any scanned email, suspicious URLs, SPF/DKIM/DMARC authentication failures, or incident response playbooks.",
+      "Welcome to the **EmailDetection SOC Assistant**. Ask me about any scanned email, suspicious URLs, SPF/DKIM/DMARC authentication failures, or incident response playbooks.",
     created_at: new Date(now - 3600000 * 6).toISOString(),
   });
 }

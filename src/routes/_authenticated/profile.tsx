@@ -14,13 +14,13 @@ import { getProfile, updateProfile } from "@/lib/profile.functions";
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
     meta: [
-      { title: "Your Profile — PhishGuard AI" },
+      { title: "Your Profile — EmailDetection" },
       {
         name: "description",
-        content: "Manage your PhishGuard AI display name, username and account overview.",
+        content: "Manage your EmailDetection display name, username and account overview.",
       },
-      { property: "og:title", content: "Your Profile — PhishGuard AI" },
-      { property: "og:description", content: "Manage your PhishGuard AI account details." },
+      { property: "og:title", content: "Your Profile — EmailDetection" },
+      { property: "og:description", content: "Manage your EmailDetection account details." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -54,7 +54,7 @@ function ProfilePage() {
   });
 
   return (
-    <AppShell title="Profile" description="Your analyst identity inside PhishGuard AI.">
+    <AppShell title="Profile" description="Your analyst identity inside EmailDetection.">
       {isLoading ? (
         <div className="flex h-48 items-center justify-center">
           <Loader2 className="size-6 animate-spin text-primary" />

@@ -20,13 +20,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/scanner")({
   head: () => ({
     meta: [
-      { title: "Email Scanner — PhishGuard AI" },
+      { title: "Email Scanner — EmailDetection" },
       {
         name: "description",
         content:
           "Paste an email or upload an .eml file and get an instant phishing verdict with risk score, indicators and URL forensics.",
       },
-      { property: "og:title", content: "Email Scanner — PhishGuard AI" },
+      { property: "og:title", content: "Email Scanner — EmailDetection" },
       {
         property: "og:description",
         content: "Instant phishing verdicts with explainable AI analysis.",

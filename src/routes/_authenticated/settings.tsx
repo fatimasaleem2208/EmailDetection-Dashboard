@@ -15,13 +15,13 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
     meta: [
-      { title: "Settings — PhishGuard AI" },
+      { title: "Settings — EmailDetection" },
       {
         name: "description",
-        content: "Control appearance, notifications and account data in PhishGuard AI.",
+        content: "Control appearance, notifications and account data in EmailDetection.",
       },
-      { property: "og:title", content: "Settings — PhishGuard AI" },
-      { property: "og:description", content: "Control your PhishGuard AI preferences." },
+      { property: "og:title", content: "Settings — EmailDetection" },
+      { property: "og:description", content: "Control your EmailDetection preferences." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

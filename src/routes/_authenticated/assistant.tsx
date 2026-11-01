@@ -16,13 +16,13 @@ export const Route = createFileRoute("/_authenticated/assistant")({
   validateSearch: z.object({ scanId: z.string().min(1).optional() }),
   head: () => ({
     meta: [
-      { title: "AI Cybersecurity Assistant — PhishGuard AI" },
+      { title: "AI Cybersecurity Assistant — EmailDetection" },
       {
         name: "description",
         content:
           "Ask an AI security analyst about phishing tactics, suspicious emails, incident response and safe browsing habits.",
       },
-      { property: "og:title", content: "AI Cybersecurity Assistant — PhishGuard AI" },
+      { property: "og:title", content: "AI Cybersecurity Assistant — EmailDetection" },
       {
         property: "og:description",
         content: "An always-on AI analyst for phishing questions and incident guidance.",

@@ -1,5 +1,5 @@
 /**
- * PhishGuard AI — heuristic detection engine.
+ * EmailDetection — heuristic detection engine.
  *
  * Pure, deterministic, dependency-free scoring of an email. Runs identically on
  * the server (scan persistence) and the client (instant previews). The AI layer

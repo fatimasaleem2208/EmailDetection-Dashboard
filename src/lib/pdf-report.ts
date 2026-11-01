@@ -34,7 +34,7 @@ export function downloadScanReport(scan: ReportScan) {
   doc.setTextColor(94, 234, 212);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(20);
-  doc.text("PhishGuard AI", margin, 42);
+  doc.text("EmailDetection", margin, 42);
   doc.setTextColor(226, 232, 240);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
@@ -162,7 +162,7 @@ export function downloadScanReport(scan: ReportScan) {
     doc.setFontSize(8);
     doc.setTextColor(120, 130, 150);
     doc.text(
-      `PhishGuard AI — confidential security report — page ${p} of ${pageCount}`,
+      `EmailDetection — confidential security report — page ${p} of ${pageCount}`,
       pageWidth / 2,
       doc.internal.pageSize.getHeight() - 22,
       { align: "center" },

@@ -12,13 +12,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/url-analysis")({
   head: () => ({
     meta: [
-      { title: "URL Analysis — PhishGuard AI" },
+      { title: "URL Analysis — EmailDetection" },
       {
         name: "description",
         content:
           "Inspect links for IP hosts, shorteners, punycode, brand impersonation and suspicious TLDs before anyone clicks them.",
       },
-      { property: "og:title", content: "URL Analysis — PhishGuard AI" },
+      { property: "og:title", content: "URL Analysis — EmailDetection" },
       {
         property: "og:description",
         content: "Structural forensics for suspicious links, scored and explained.",

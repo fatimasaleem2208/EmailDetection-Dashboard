@@ -9,15 +9,15 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/activity")({
   head: () => ({
     meta: [
-      { title: "Activity Log — PhishGuard AI" },
+      { title: "Activity Log — EmailDetection" },
       {
         name: "description",
         content: "A chronological audit trail of scans, deletions and account changes.",
       },
-      { property: "og:title", content: "Activity Log — PhishGuard AI" },
+      { property: "og:title", content: "Activity Log — EmailDetection" },
       {
         property: "og:description",
-        content: "Audit every security-relevant action on your PhishGuard AI account.",
+        content: "Audit every security-relevant action on your EmailDetection account.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

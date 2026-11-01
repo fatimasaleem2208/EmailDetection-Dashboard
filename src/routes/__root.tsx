@@ -78,10 +78,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "PhishGuard AI — Intelligent Phishing Email Detection" },
+      { title: "EmailDetection — Intelligent Phishing Email Detection" },
       { name: "description", content: "Detect phishing emails with heuristic analysis, URL forensics and explainable AI." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "PhishGuard AI" },
+      { property: "og:title", content: "EmailDetection" },
       { property: "og:description", content: "Intelligent phishing email detection with explainable AI." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

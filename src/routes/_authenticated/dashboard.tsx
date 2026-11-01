@@ -35,13 +35,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "Threat Dashboard — PhishGuard AI" },
+      { title: "Threat Dashboard — EmailDetection" },
       {
         name: "description",
         content:
           "Live phishing detection metrics: scan volume, threat distribution, risk trends and recent security activity.",
       },
-      { property: "og:title", content: "Threat Dashboard — PhishGuard AI" },
+      { property: "og:title", content: "Threat Dashboard — EmailDetection" },
       {
         property: "og:description",
         content: "Monitor phishing detections, risk trends and security activity in one console.",

@@ -1,8 +1,8 @@
-PhishGuard AI
+EmailDetection 
 
 AI-Powered Phishing Detection & Email Security Platform
 
-PhishGuard AI is a full-stack cybersecurity application designed to detect and analyze phishing emails and suspicious URLs using security heuristics, URL forensics, and AI-powered explanations.
+EmailDetection is a full-stack cybersecurity application designed to detect and analyze phishing emails and suspicious URLs using security heuristics, URL forensics, and AI-powered explanations.
 
 The platform provides users with an interactive security dashboard where they can scan emails, analyze URLs, review risk indicators, interact with an AI security assistant, and generate detailed PDF security reports.
 
@@ -20,7 +20,7 @@ Email Phishing Scanner
 
 Threat Detection
 
-PhishGuard AI evaluates multiple security signals, including:
+EmailDetection evaluates multiple security signals, including:
 
 - Suspicious sender addresses
 - Urgency and social-engineering language
@@ -69,11 +69,11 @@ Application Preview
 
 Landing Page
 
-"PhishGuard AI Landing Page" (screenshots/landing-page.png)
+"EmailDetection Landing Page" (screenshots/landing-page.png)
 
 Security Dashboard
 
-"PhishGuard AI Dashboard" (screenshots/dashboard.png)
+"EmailDetection Dashboard" (screenshots/dashboard.png)
 
 Email Scanner
 
@@ -104,7 +104,7 @@ Generated Security Report
 User
  │
  ▼
-PhishGuard AI
+EmailDetection
  │
  ├── Email Scanner
  │      │
@@ -227,7 +227,7 @@ Then open the local URL provided by Vite/TanStack Start.
 
 Security Considerations
 
-PhishGuard AI follows several security practices:
+EmailDetection follows several security practices:
 
 - API keys are stored in environment variables.
 - Sensitive server-side operations are kept outside the client bundle.
@@ -241,7 +241,7 @@ Important: This project is intended as a cybersecurity learning and portfolio pr
 
 Project Goals
 
-PhishGuard AI was built to explore the intersection of:
+EmailDetection was built to explore the intersection of:
 
 - Cybersecurity
 - Artificial Intelligence
@@ -274,7 +274,7 @@ Project Status
 
 Status: Active / Portfolio Project
 
-PhishGuard AI currently supports authentication, email analysis, phishing detection, URL analysis, AI-assisted explanations, dashboard analytics, and PDF security reports.
+EmailDetection currently supports authentication, email analysis, phishing detection, URL analysis, AI-assisted explanations, dashboard analytics, and PDF security reports.
 
 ---
 

@@ -13,15 +13,15 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
-      { title: "Set a new password — PhishGuard AI" },
+      { title: "Set a new password — EmailDetection" },
       {
         name: "description",
-        content: "Choose a new password for your PhishGuard AI phishing detection account.",
+        content: "Choose a new password for your EmailDetection phishing detection account.",
       },
-      { property: "og:title", content: "Set a new password — PhishGuard AI" },
+      { property: "og:title", content: "Set a new password — EmailDetection" },
       {
         property: "og:description",
-        content: "Complete your PhishGuard AI password reset securely.",
+        content: "Complete your EmailDetection password reset securely.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

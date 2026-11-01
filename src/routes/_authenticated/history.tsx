@@ -32,13 +32,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/history")({
   head: () => ({
     meta: [
-      { title: "Scan History — PhishGuard AI" },
+      { title: "Scan History — EmailDetection" },
       {
         name: "description",
         content:
           "Search, review, export and delete every phishing scan you've run, with full indicator and URL breakdowns.",
       },
-      { property: "og:title", content: "Scan History — PhishGuard AI" },
+      { property: "og:title", content: "Scan History — EmailDetection" },
       {
         property: "og:description",
         content: "A searchable archive of every analyzed email and its verdict.",

@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "PhishGuard AI — Intelligent Phishing Email Detection" },
+      { title: "EmailDetection — Intelligent Phishing Email Detection" },
       {
         name: "description",
         content:
           "Detect phishing emails in seconds with a heuristic detection engine, URL forensics, explainable AI analysis and exportable PDF reports.",
       },
-      { property: "og:title", content: "PhishGuard AI — Intelligent Phishing Email Detection" },
+      { property: "og:title", content: "EmailDetection — Intelligent Phishing Email Detection" },
       {
         property: "og:description",
         content:
@@ -62,7 +62,7 @@ function Landing() {
             Catch the phishing email <span className="text-gradient-signal">before anyone clicks.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground">
-            PhishGuard AI combines a deterministic 40-rule detection engine with structural URL
+            EmailDetection combines a deterministic 40-rule detection engine with structural URL
             forensics and explainable AI — delivering a risk score, the evidence behind it, and the
             exact actions to take.
           </p>
@@ -93,7 +93,7 @@ function Landing() {
       </main>
 
       <footer className="relative border-t border-border/60 py-8 text-center font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-        PhishGuard AI · Security operations
+        EmailDetection · Security operations
       </footer>
     </div>
   );

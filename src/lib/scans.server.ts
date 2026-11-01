@@ -4,7 +4,7 @@
 import { analyzeEmail, type AnalysisResult } from "./phishing-engine";
 import { callAi } from "./ai.server";
 
-const EXPLAIN_INSTRUCTIONS = `You are PhishGuard AI, a senior email-security analyst.
+const EXPLAIN_INSTRUCTIONS = `You are EmailDetection, a senior email-security analyst.
 You receive a deterministic heuristic verdict plus the email. Write a concise
 explainable-AI narrative for a non-expert, in plain prose (no markdown headings,
 no bullet characters). Structure: 2-4 short paragraphs, under 180 words total.

@@ -27,16 +27,16 @@ export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Sign in — PhishGuard AI Threat Console" },
+      { title: "Sign in — EmailDetection Threat Console" },
       {
         name: "description",
         content:
-          "Access your PhishGuard AI console to scan suspicious emails, inspect URLs and review phishing detection history.",
+          "Access your EmailDetection console to scan suspicious emails, inspect URLs and review phishing detection history.",
       },
-      { property: "og:title", content: "Sign in — PhishGuard AI" },
+      { property: "og:title", content: "Sign in — EmailDetection" },
       {
         property: "og:description",
-        content: "Secure access to the PhishGuard AI phishing detection console.",
+        content: "Secure access to the EmailDetection phishing detection console.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -118,7 +118,7 @@ function AuthPage() {
           password,
         });
         if (!signInError && signInData.session) {
-          toast.success("Account created — welcome to PhishGuard AI.");
+          toast.success("Account created — welcome to EmailDetection.");
           navigate({ to: destination, replace: true });
           return;
         }
@@ -135,7 +135,7 @@ function AuthPage() {
           setSent("confirm");
           toast.success("Account created. Check your inbox to confirm your email.");
         } else {
-          toast.success("Account created — welcome to PhishGuard AI.");
+          toast.success("Account created — welcome to EmailDetection.");
           navigate({ to: destination, replace: true });
         }
       } else {
@@ -207,7 +207,7 @@ function AuthPage() {
             Stop the email that <span className="text-gradient-signal">breaks in.</span>
           </h2>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            PhishGuard AI fuses a deterministic detection engine with explainable AI analysis —
+            EmailDetection fuses a deterministic detection engine with explainable AI analysis —
             surfacing intent, indicators, URL structure and blast radius in seconds.
           </p>
           <ul className="space-y-3 text-sm">
