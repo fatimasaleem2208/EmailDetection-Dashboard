@@ -1,0 +1,5 @@
+{
+  "name": "PhishGuard AI",
+  "description": "Intelligent phishing email detection with heuristic analysis, URL forensics, and explainable AI.",
+  "requestFramePermissions": []
+}
