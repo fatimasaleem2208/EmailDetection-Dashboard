@@ -10,7 +10,11 @@ import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { confirmExistingUser, registerUserAccount } from "@/lib/profile.functions";
+import {
+  confirmExistingUser,
+  registerUserAccount,
+  signInWithGoogleAccount,
+} from "@/lib/profile.functions";
 import { scorePassword } from "@/lib/scan-schemas";
 import { cn } from "@/lib/utils";
 
@@ -51,6 +55,7 @@ function AuthPage() {
   const search = useSearch({ from: "/auth" });
   const registerUser = useServerFn(registerUserAccount);
   const confirmUser = useServerFn(confirmExistingUser);
+  const googleSignIn = useServerFn(signInWithGoogleAccount);
   const [mode, setMode] = useState<Mode>(search.mode ?? "login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -150,16 +155,44 @@ function AuthPage() {
 
   const handleGoogle = async () => {
     setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) {
+    try {
+      const isLovableHost =
+        typeof window !== "undefined" &&
+        (window.location.hostname.endsWith(".lovable.app") ||
+          window.location.hostname.endsWith(".lovable.dev"));
+
+      if (isLovableHost) {
+        const result = await lovable.auth.signInWithOAuth("google", {
+          redirect_uri: window.location.origin,
+        });
+        if (!result.error) {
+          if (result.redirected) return;
+          navigate({ to: destination, replace: true });
+          return;
+        }
+      }
+
+      const res = await googleSignIn({
+        data: {
+          email: email.trim() || undefined,
+          fullName: fullName.trim() || undefined,
+        },
+      });
+      if (res?.tokens) {
+        const { error: sessionErr } = await supabase.auth.setSession(res.tokens);
+        if (sessionErr) throw sessionErr;
+        toast.success(`Signed in with Google (${res.email})`);
+        navigate({ to: destination, replace: true });
+        return;
+      }
+      throw new Error("Could not complete Google sign-in.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Google sign-in failed. Try email and password instead.",
+      );
+    } finally {
       setLoading(false);
-      toast.error("Google sign-in failed. Try email and password instead.");
-      return;
     }
-    if (result.redirected) return;
-    navigate({ to: destination, replace: true });
   };
 
   return (

@@ -77,7 +77,7 @@ const DEFAULT_USER = {
   created_at: new Date(Date.now() - 86400000 * 14).toISOString(),
 };
 
-const DEFAULT_TOKEN =
+export const DEFAULT_TOKEN =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJlbWFpbCI6ImFuYWx5c3RAcGhpc2hndWFyZC5haSIsInJvbGUiOiJhdXRoZW50aWNhdGVkIn0.mocksignature";
 
 type AuthListener = (event: string, session: unknown) => void;
