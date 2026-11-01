@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-const STORAGE_KEY = "phishguard-theme";
+const STORAGE_KEY = "emaildetection-theme";
 export type Theme = "dark" | "light";
 
 function apply(theme: Theme) {

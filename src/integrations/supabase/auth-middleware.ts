@@ -44,7 +44,7 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
         context: {
           supabase: mockSupabase,
           userId: MOCK_USER_ID,
-          claims: { sub: MOCK_USER_ID, email: 'analyst@phishguard.ai', role: 'authenticated' },
+          claims: { sub: MOCK_USER_ID, email: 'analyst@emaildetection.ai', role: 'authenticated' },
         },
       });
     };

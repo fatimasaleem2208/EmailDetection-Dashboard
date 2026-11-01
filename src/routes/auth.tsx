@@ -381,7 +381,7 @@ function AuthPage() {
             <p className="mt-6 text-center text-sm text-muted-foreground">
               {mode === "login" ? (
                 <>
-                  New to PhishGuard?{" "}
+                  New to EmailDetection?{" "}
                   <button
                     className="font-medium text-primary hover:underline"
                     onClick={() => {

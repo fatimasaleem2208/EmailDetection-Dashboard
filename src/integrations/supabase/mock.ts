@@ -70,7 +70,7 @@ const DEFAULT_USER = {
   id: MOCK_USER_ID,
   aud: "authenticated",
   role: "authenticated",
-  email: "analyst@phishguard.ai",
+  email: "analyst@emaildtection.ai",
   email_confirmed_at: new Date().toISOString(),
   user_metadata: { full_name: "Alex Mercer" },
   app_metadata: { provider: "email", providers: ["email"] },
@@ -83,7 +83,7 @@ export const DEFAULT_TOKEN =
 type AuthListener = (event: string, session: unknown) => void;
 const authListeners = new Set<AuthListener>();
 
-const STORAGE_KEY = "phishguard_mock_session";
+const STORAGE_KEY = "emaildetection_mock_session";
 
 function getStoredSession() {
   if (typeof window === "undefined") {
@@ -171,7 +171,7 @@ export function ensureUserSeeded(userInfo: {
   full_name?: string | undefined;
 }) {
   const userId = userInfo.id || MOCK_USER_ID;
-  const email = userInfo.email || "analyst@phishguard.ai";
+  const email = userInfo.email || "analyst@emaildetection.ai";
   const fullName =
     userInfo.full_name ||
     (email.includes("@") ? (email.split("@")[0] ?? "Analyst") : "Alex Mercer");

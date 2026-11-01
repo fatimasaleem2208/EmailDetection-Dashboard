@@ -16,7 +16,7 @@ export function Logo({
       {!compact && (
         <span className="flex flex-col leading-none">
           <span className="text-[15px] font-semibold tracking-tight text-foreground">
-            PhishGuard <span className="text-gradient-signal">AI</span>
+            EmailDetection <span className="text-gradient-signal"></span>
           </span>
           <span className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
             Threat Intelligence

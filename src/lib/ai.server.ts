@@ -41,7 +41,7 @@ export async function callAi(options: {
     if (lastInput.startsWith("VERDICT:")) {
       throw new AiGatewayError("AI service is not configured.", 500);
     }
-    return `**PhishGuard SOC Guidance (Offline Heuristics Mode)**\n\nBased on your query:\n- **Verify Sender & Headers**: Always inspect the raw \`From\`, \`Reply-To\`, and \`Return-Path\` headers along with SPF, DKIM, and DMARC alignment.\n- **Inspect Embedded URLs**: Look for raw IP hosts, lookalike domains (typosquatting/homoglyphs), unencrypted HTTP login forms, and suspicious TLDs (\`.xyz\`, \`.top\`, \`.click\`).\n- **Recommended Action**: Never enter credentials via an emailed link. Navigate directly to the service via a known bookmark, quarantine suspicious messages, and report indicators of compromise (IOCs) to your security team.`;
+    return `**EmailDetection SOC Guidance (Offline Heuristics Mode)**\n\nBased on your query:\n- **Verify Sender & Headers**: Always inspect the raw \`From\`, \`Reply-To\`, and \`Return-Path\` headers along with SPF, DKIM, and DMARC alignment.\n- **Inspect Embedded URLs**: Look for raw IP hosts, lookalike domains (typosquatting/homoglyphs), unencrypted HTTP login forms, and suspicious TLDs (\`.xyz\`, \`.top\`, \`.click\`).\n- **Recommended Action**: Never enter credentials via an emailed link. Navigate directly to the service via a known bookmark, quarantine suspicious messages, and report indicators of compromise (IOCs) to your security team.`;
   }
 
   const messages = [

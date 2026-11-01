@@ -170,7 +170,7 @@ export function downloadScanReport(scan: ReportScan) {
   }
 
   const safeName = (scan.subject || "scan").replace(/[^a-z0-9]+/gi, "-").slice(0, 40).toLowerCase();
-  doc.save(`phishguard-report-${safeName || "scan"}.pdf`);
+  doc.save(`EmailDetection-report-${safeName || "scan"}.pdf`);
 }
 
 export function downloadCsv(rows: ReportScan[]) {
@@ -189,7 +189,7 @@ export function downloadCsv(rows: ReportScan[]) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `phishguard-scan-history-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.download = `emaildetection-scan-history-${new Date().toISOString().slice(0, 10)}.csv`;
   link.click();
   URL.revokeObjectURL(url);
 }
