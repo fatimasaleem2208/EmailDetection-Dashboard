@@ -5,7 +5,8 @@
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
-export const DEFAULT_MODEL = "llama-3.3-70b-versatile";
+export const DEFAULT_MODEL = "openai/gpt-oss-120b";
+const FALLBACK_MODELS = ["openai/gpt-oss-20b", "qwen/qwen3.8-27b"];
 
 export class AiGatewayError extends Error {
   status: number;
@@ -24,6 +25,7 @@ interface GroqResponse {
   }>;
   error?: {
     message?: string;
+    code?: string;
   };
 }
 
@@ -50,51 +52,56 @@ export async function callAi(options: {
     ...options.input,
   ];
 
-  const response = await fetch(GROQ_API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${key}`,
-    },
-    body: JSON.stringify({
-      model: options.model ?? DEFAULT_MODEL,
-      messages,
-      temperature: 0.2,
-    }),
-  });
+  const modelsToTry = [
+    options.model ?? DEFAULT_MODEL,
+    ...FALLBACK_MODELS.filter((m) => m !== (options.model ?? DEFAULT_MODEL)),
+  ];
 
-  if (response.status === 429) {
-    throw new AiGatewayError(
-      "AI rate limit reached. Please try again in a moment.",
-      429,
-    );
+  let lastStatus = 500;
+  let lastDetail = "";
+
+  for (const candidateModel of modelsToTry) {
+    const response = await fetch(GROQ_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${key}`,
+      },
+      body: JSON.stringify({
+        model: candidateModel,
+        messages,
+        temperature: 0.2,
+      }),
+    });
+
+    if (response.status === 429) {
+      throw new AiGatewayError(
+        "AI rate limit reached. Please try again in a moment.",
+        429,
+      );
+    }
+
+    if (!response.ok) {
+      lastStatus = response.status;
+      lastDetail = await response.text();
+      console.warn(
+        `Groq API model ${candidateModel} returned ${response.status}:`,
+        lastDetail.slice(0, 300),
+      );
+      continue;
+    }
+
+    const payload = (await response.json()) as GroqResponse;
+    const text = payload.choices?.[0]?.message?.content?.trim();
+
+    if (text) {
+      return text;
+    }
   }
 
-  if (!response.ok) {
-    const detail = await response.text();
-
-    console.error(
-      "Groq API error",
-      response.status,
-      detail.slice(0, 500),
-    );
-
-    throw new AiGatewayError(
-      "The AI service could not complete this request.",
-      response.status,
-    );
-  }
-
-  const payload = (await response.json()) as GroqResponse;
-
-  const text = payload.choices?.[0]?.message?.content?.trim();
-
-  if (!text) {
-    throw new AiGatewayError(
-      "The AI service returned an empty response.",
-      502,
-    );
-  }
-
-  return text;
+  console.error("Groq API error across all candidate models", lastStatus, lastDetail.slice(0, 500));
+  throw new AiGatewayError(
+    "The AI service could not complete this request.",
+    lastStatus,
+  );
 }

@@ -63,10 +63,26 @@ export const sendChatMessage = createServerFn({ method: "POST" })
       throw new Error("The assistant is unavailable right now.");
     }
 
+    const now = Date.now();
+    const userMsg = {
+      id: `user-${now}`,
+      user_id: context.userId,
+      role: "user",
+      content: data.message,
+      created_at: new Date(now).toISOString(),
+    };
+    const assistantMsg = {
+      id: `assistant-${now + 1}`,
+      user_id: context.userId,
+      role: "assistant",
+      content: reply,
+      created_at: new Date(now + 1).toISOString(),
+    };
+
     await context.supabase.from("chat_messages").insert([
       { user_id: context.userId, role: "user", content: data.message },
       { user_id: context.userId, role: "assistant", content: reply },
     ]);
 
-    return { reply };
+    return { reply, userMessage: userMsg, assistantMessage: assistantMsg };
   });

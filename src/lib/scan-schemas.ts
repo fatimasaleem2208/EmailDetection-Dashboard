@@ -9,7 +9,7 @@ export const analyzeInputSchema = z.object({
 });
 export type AnalyzeInput = z.infer<typeof analyzeInputSchema>;
 
-export const idSchema = z.object({ id: z.string().uuid() });
+export const idSchema = z.object({ id: z.string().trim().min(1) });
 
 export const historyQuerySchema = z.object({
   search: z.string().trim().max(200).optional().default(""),
@@ -19,7 +19,7 @@ export const historyQuerySchema = z.object({
 
 export const chatInputSchema = z.object({
   message: z.string().trim().min(1).max(4000),
-  scanId: z.string().uuid().nullable().optional().default(null),
+  scanId: z.string().trim().min(1).nullable().optional().default(null),
 });
 
 export const profileUpdateSchema = z.object({

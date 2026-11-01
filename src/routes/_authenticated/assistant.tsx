@@ -13,7 +13,7 @@ import { getScan } from "@/lib/scans.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/assistant")({
-  validateSearch: z.object({ scanId: z.string().uuid().optional() }),
+  validateSearch: z.object({ scanId: z.string().min(1).optional() }),
   head: () => ({
     meta: [
       { title: "AI Cybersecurity Assistant — PhishGuard AI" },
@@ -75,8 +75,15 @@ function AssistantPage() {
   const mutation = useMutation({
     mutationFn: async (message: string) =>
       send({ data: { message, scanId: scanId ?? undefined } }),
-    onSuccess: () => {
+    onSuccess: (res) => {
       setPendingUser(null);
+      if (res?.userMessage && res?.assistantMessage) {
+        queryClient.setQueryData<Message[]>(["chat"], (prev = []) => [
+          ...prev,
+          res.userMessage as Message,
+          res.assistantMessage as Message,
+        ]);
+      }
       queryClient.invalidateQueries({ queryKey: ["chat"] });
     },
     onError: (error: Error) => {

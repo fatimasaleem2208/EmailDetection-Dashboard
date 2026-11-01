@@ -470,13 +470,15 @@ export class MockQueryBuilder {
     if (this.operation === "insert") {
       const items = Array.isArray(this.payload) ? this.payload : [this.payload];
       const inserted: Array<Record<string, unknown>> = [];
-      for (const item of items) {
+      const baseTime = Date.now();
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
         const record: Record<string, unknown> = {
-          id: `${this.table}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-          created_at: new Date().toISOString(),
+          id: `${this.table}-${baseTime + i}-${Math.random().toString(36).slice(2, 8)}`,
+          created_at: new Date(baseTime + i).toISOString(),
           ...(item as Record<string, unknown>),
         };
-        list.unshift(record);
+        list.push(record);
         inserted.push(record);
       }
       const data =
