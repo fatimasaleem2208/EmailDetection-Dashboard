@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EmailDetection URL Check</title><link rel="stylesheet" href="popup.css"></head>
+<body><main>
+<header><span class="mark">✓</span><div><strong>EmailDetection</strong><small>Browser URL Check</small></div></header>
+<div class="intro">Inspect the current tab for URL warning signs. No browsing data leaves the extension.</div>
+<label for="target">Current URL</label><div id="target" class="url">Loading current tab…</div>
+<div id="result" class="result" role="status" aria-live="polite"><strong id="headline">Ready to inspect</strong><p id="summary">Select a website tab to begin.</p></div>
+<ul id="findings" class="findings"></ul>
+<button id="scan" class="primary" disabled>Check this URL</button>
+<button id="open" class="secondary" disabled>Open in EmailDetection</button>
+<div class="row"><button id="copy" class="linkbtn" disabled>Copy URL</button><button id="settings-toggle" class="linkbtn">App address ⚙</button></div>
+<div id="settings" class="settings" hidden><label for="app-base">EmailDetection website address</label><input id="app-base" type="url" spellcheck="false" value="http://localhost:3000"><button id="save-base" class="secondary">Save address</button><p class="note" id="setting-note">Use localhost during development. Use your deployed HTTPS address later.</p></div>
+<p class="footnote">Preliminary structural check only. This does not use live threat intelligence and cannot certify a site as safe.</p>
+</main><script src="popup.js"></script></body></html>
