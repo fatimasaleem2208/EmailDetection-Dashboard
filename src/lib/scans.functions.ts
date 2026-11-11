@@ -144,11 +144,12 @@ export const getDashboardData = createServerFn({ method: "GET" })
 export const getActivityLogs = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data } = await context.supabase
+    const { data, error } = await context.supabase
       .from("activity_logs")
       .select("*")
       .eq("user_id", context.userId)
       .order("created_at", { ascending: false })
       .limit(100);
+    if (error) throw new Error(`Could not load activity logs: ${error.message}`);
     return data ?? [];
   });

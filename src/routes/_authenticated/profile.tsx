@@ -5,10 +5,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Save, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getProfile, updateProfile } from "@/lib/profile.functions";
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -32,20 +32,22 @@ function ProfilePage() {
   const queryClient = useQueryClient();
   const fetchProfile = useServerFn(getProfile);
   const save = useServerFn(updateProfile);
-  const { data, isLoading } = useQuery({ queryKey: ["profile"], queryFn: () => fetchProfile() });
+  const { data, isLoading, error: profileError } = useQuery({ queryKey: ["profile"], queryFn: () => fetchProfile() });
 
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
+  const [displayRole, setDisplayRole] = useState("general_user");
 
   useEffect(() => {
     if (data?.profile) {
       setFullName(data.profile.full_name ?? "");
       setUsername(data.profile.username ?? "");
+      setDisplayRole(data.profile.display_role ?? "general_user");
     }
   }, [data]);
 
   const mutation = useMutation({
-    mutationFn: async () => save({ data: { full_name: fullName, username } }),
+    mutationFn: async () => save({ data: { full_name: fullName, username, display_role: displayRole as "general_user" | "security_analyst" | "it_professional" | "student" | "researcher" } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       toast.success("Profile updated");
@@ -55,6 +57,7 @@ function ProfilePage() {
 
   return (
     <AppShell title="Profile" description="Your analyst identity inside EmailDetection.">
+      {profileError && <div role="alert" className="mb-4 rounded-xl border border-critical/40 p-3 text-sm text-critical">{profileError.message}</div>}
       {isLoading ? (
         <div className="flex h-48 items-center justify-center">
           <Loader2 className="size-6 animate-spin text-primary" />
@@ -90,8 +93,22 @@ function ProfilePage() {
               </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" value={data?.profile?.email ?? ""} disabled />
+              <Label htmlFor="display-role">Professional role</Label>
+              <Select value={displayRole} onValueChange={setDisplayRole}>
+                <SelectTrigger id="display-role"><SelectValue placeholder="Select a role" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="general_user">General User</SelectItem>
+                  <SelectItem value="security_analyst">Security Analyst</SelectItem>
+                  <SelectItem value="it_professional">IT Professional</SelectItem>
+                  <SelectItem value="student">Student</SelectItem>
+                  <SelectItem value="researcher">Researcher</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">This is a profile label, not an administrator permission.</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Sign-in email (cannot be changed here)</Label>
+              <Input id="email" value={data?.accountEmail ?? ""} readOnly disabled />
             </div>
             <Button type="submit" disabled={mutation.isPending}>
               {mutation.isPending ? (
@@ -111,7 +128,7 @@ function ProfilePage() {
               <div>
                 <p className="text-sm font-medium">{fullName || "Analyst"}</p>
                 <p className="font-mono text-[11px] text-muted-foreground">
-                  {data?.profile?.email}
+                  {data?.accountEmail}
                 </p>
               </div>
             </div>
@@ -120,21 +137,19 @@ function ProfilePage() {
                 <span className="text-muted-foreground">Total scans</span>
                 <span className="font-mono">{data?.totalScans ?? 0}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Roles</span>
-                <span className="flex gap-1">
-                  {(data?.roles ?? ["user"]).map((role) => (
-                    <Badge key={role} variant="outline" className="text-[10px] uppercase">
-                      {role}
-                    </Badge>
-                  ))}
-                </span>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Account</span>
+                <span className="text-xs">Authenticated</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">Professional role</span>
+                <span className="text-xs text-right">{({general_user:"General User",security_analyst:"Security Analyst",it_professional:"IT Professional",student:"Student",researcher:"Researcher"} as Record<string,string>)[displayRole] ?? "General User"}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Member since</span>
                 <span className="font-mono text-xs">
-                  {data?.profile?.created_at
-                    ? new Date(data.profile.created_at).toLocaleDateString()
+                  {data?.joinedAt
+                    ? new Date(data.joinedAt).toLocaleDateString()
                     : "—"}
                 </span>
               </div>

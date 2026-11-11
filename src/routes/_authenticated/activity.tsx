@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Activity, Loader2 } from "lucide-react";
+import { Activity, Loader2, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/app-shell";
 import { getActivityLogs } from "@/lib/scans.functions";
 import { cn } from "@/lib/utils";
@@ -28,14 +29,16 @@ export const Route = createFileRoute("/_authenticated/activity")({
 
 function ActivityPage() {
   const fetchLogs = useServerFn(getActivityLogs);
-  const { data = [], isLoading } = useQuery({ queryKey: ["activity"], queryFn: () => fetchLogs() });
+  const { data = [], isLoading, error, refetch, isFetching } = useQuery({ queryKey: ["activity"], queryFn: () => fetchLogs(), staleTime: 0 });
 
   return (
-    <AppShell title="Activity Log" description="Every security-relevant event on your account.">
+    <AppShell title="Activity Log" description="Recorded security events for your account." actions={<Button size="sm" variant="outline" onClick={() => refetch()} disabled={isFetching}><RefreshCw className="size-4" /> Refresh</Button>}>
       {isLoading ? (
         <div className="flex h-48 items-center justify-center">
           <Loader2 className="size-6 animate-spin text-primary" />
         </div>
+      ) : error ? (
+        <div role="alert" className="glass-panel rounded-2xl p-5 text-critical">Could not load activity logs: {error.message}</div>
       ) : data.length === 0 ? (
         <div className="glass-panel flex h-56 flex-col items-center justify-center rounded-2xl text-center">
           <Activity className="size-8 text-muted-foreground" />

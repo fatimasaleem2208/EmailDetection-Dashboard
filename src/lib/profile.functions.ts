@@ -5,18 +5,19 @@ import { profileUpdateSchema, settingsUpdateSchema } from "@/lib/scan-schemas";
 export const getProfile = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const [profileRes, countRes, roleRes] = await Promise.all([
+    const [profileRes, countRes] = await Promise.all([
       context.supabase.from("profiles").select("*").eq("id", context.userId).maybeSingle(),
-      context.supabase
-        .from("scans")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", context.userId),
-      context.supabase.from("user_roles").select("role").eq("user_id", context.userId),
+      context.supabase.from("scans").select("id", { count: "exact", head: true }).eq("user_id", context.userId),
     ]);
+    if (profileRes.error) throw new Error(`Could not load profile: ${profileRes.error.message}`);
+    if (countRes.error) throw new Error(`Could not count email scans: ${countRes.error.message}`);
+    // Email comes from verified authentication claims, NOT an editable profile field.
+    const accountEmail = typeof context.claims?.email === "string" ? context.claims.email : "";
     return {
       profile: profileRes.data,
+      accountEmail,
+      joinedAt: profileRes.data?.created_at ?? null,
       totalScans: countRes.count ?? 0,
-      roles: (roleRes.data ?? []).map((r) => r.role),
     };
   });
 
@@ -24,20 +25,25 @@ export const updateProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((input: unknown) => profileUpdateSchema.parse(input))
   .handler(async ({ data, context }) => {
-    const { error } = await context.supabase
-      .from("profiles")
-      .update({ full_name: data.full_name, username: data.username })
-      .eq("id", context.userId);
+    // This updates a personal display label, never the Supabase authorization role.
+    // Upsert repairs legacy accounts that have an auth.user but no profile row.
+    const { error } = await context.supabase.from("profiles").upsert({
+      id: context.userId,
+      full_name: data.full_name,
+      username: data.username,
+      display_role: data.display_role,
+    }, { onConflict: "id" });
     if (error) {
       if (error.code === "23505") throw new Error("That username is already taken.");
-      throw new Error("Could not update your profile.");
+      throw new Error(`Could not update your profile: ${error.message}`);
     }
-    await context.supabase.from("activity_logs").insert({
+    const { error: logError } = await context.supabase.from("activity_logs").insert({
       user_id: context.userId,
       action: "profile_updated",
       detail: "Profile details changed",
       severity: "info",
     });
+    if (logError) console.error("profile activity log failed", logError);
     return { ok: true };
   });
 

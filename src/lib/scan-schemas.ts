@@ -25,6 +25,7 @@ export const chatInputSchema = z.object({
 
 export const profileUpdateSchema = z.object({
   full_name: z.string().trim().min(1, "Full name is required").max(120),
+  display_role: z.enum(["general_user", "security_analyst", "it_professional", "student", "researcher"]),
   username: z
     .string()
     .trim()
