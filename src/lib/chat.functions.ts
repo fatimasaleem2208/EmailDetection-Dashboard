@@ -7,19 +7,21 @@ import { callAi, AiGatewayError } from "@/lib/ai.server";
 export const getChatHistory = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data } = await context.supabase
+    const { data, error } = await context.supabase
       .from("chat_messages")
       .select("*")
       .eq("user_id", context.userId)
       .order("created_at", { ascending: true })
       .limit(200);
+    if (error) throw new Error(`Unable to load AI chat history: ${error.message}`);
     return data ?? [];
   });
 
 export const clearChatHistory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await context.supabase.from("chat_messages").delete().eq("user_id", context.userId);
+    const { error } = await context.supabase.from("chat_messages").delete().eq("user_id", context.userId);
+    if (error) throw new Error(`Unable to clear AI chat history: ${error.message}`);
     return { ok: true };
   });
 
@@ -27,12 +29,14 @@ export const sendChatMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((input: unknown) => chatInputSchema.parse(input))
   .handler(async ({ data, context }) => {
-    const { data: history } = await context.supabase
+    const { data: history, error: historyError } = await context.supabase
       .from("chat_messages")
       .select("role, content")
       .eq("user_id", context.userId)
       .order("created_at", { ascending: true })
       .limit(30);
+
+    if (historyError) throw new Error(`Unable to read AI chat history: ${historyError.message}`);
 
     let scanContext: string | null = null;
     if (data.scanId) {
@@ -80,10 +84,15 @@ export const sendChatMessage = createServerFn({ method: "POST" })
       created_at: new Date(now + 1).toISOString(),
     };
 
-    await context.supabase.from("chat_messages").insert([
+    const { error: saveError } = await context.supabase.from("chat_messages").insert([
       { user_id: context.userId, role: "user", content: data.message },
       { user_id: context.userId, role: "assistant", content: reply },
     ]);
+
+    if (saveError) {
+      console.error("AI chat save failed", { code: saveError.code, message: saveError.message });
+      throw new Error(`AI answer generated, but could not save chat history: ${saveError.message}`);
+    }
 
     return { reply, userMessage: userMsg, assistantMessage: assistantMsg };
   });
