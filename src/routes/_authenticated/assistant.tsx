@@ -58,6 +58,7 @@ function AssistantPage() {
   const clear = useServerFn(clearChatHistory);
   const fetchScan = useServerFn(getScan);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const sendingRef = useRef(false);
   const [draft, setDraft] = useState("");
   const [scanPromptReady, setScanPromptReady] = useState(false);
   const handledContextRef = useRef<string | null>(null);
@@ -107,6 +108,7 @@ function AssistantPage() {
     mutationFn: async (message: string) =>
       send({ data: { message, scanId: scanId ?? undefined } }),
     onSuccess: (res) => {
+      sendingRef.current = false;
       setPendingUser(null);
       if (res?.userMessage && res?.assistantMessage) {
         queryClient.setQueryData<Message[]>(["chat"], (prev = []) => [
@@ -117,8 +119,11 @@ function AssistantPage() {
       }
       queryClient.invalidateQueries({ queryKey: ["chat"] });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, attemptedMessage: string) => {
+      sendingRef.current = false;
       setPendingUser(null);
+      // Restore the failed prompt, without overwriting anything typed while waiting.
+      setDraft((current) => current.trim() ? current : attemptedMessage);
       toast.error(error.message);
     },
   });
@@ -129,7 +134,8 @@ function AssistantPage() {
 
   const submit = (text: string) => {
     const message = text.trim();
-    if (!message || mutation.isPending) return;
+    if (!message || sendingRef.current || mutation.isPending) return;
+    sendingRef.current = true;
     setDraft("");
     setPendingUser(message);
     mutation.mutate(message);

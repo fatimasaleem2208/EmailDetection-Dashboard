@@ -34,7 +34,7 @@ export const sendChatMessage = createServerFn({ method: "POST" })
       .select("role, content")
       .eq("user_id", context.userId)
       .order("created_at", { ascending: true })
-      .limit(30);
+      .limit(16);
 
     if (historyError) throw new Error(`Unable to read AI chat history: ${historyError.message}`);
 
@@ -53,11 +53,11 @@ export const sendChatMessage = createServerFn({ method: "POST" })
 
     const turns = (history ?? []).map((m) => ({
       role: m.role === "assistant" ? ("assistant" as const) : ("user" as const),
-      content: m.content,
+      content: m.content.slice(0, 1600),
     }));
     turns.push({
       role: "user" as const,
-      content: scanContext ? `${scanContext}\n\nQUESTION: ${data.message}` : data.message,
+      content: scanContext ? `${scanContext.slice(0, 4500)}\n\nQUESTION: ${data.message}` : data.message,
     });
 
     let reply: string;
