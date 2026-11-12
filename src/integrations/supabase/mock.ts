@@ -742,7 +742,15 @@ export function wrapSupabaseWithFallback(
   return new Proxy(realClient, {
     get(target, prop, receiver) {
       if (prop === "from") {
-        return (table: keyof TableMap) => new FallbackQueryBuilder(target, table);
+        return (table: keyof TableMap | "scan_feedback" | "ai_answer_feedback") => {
+          // New feedback tables must use the real Supabase query builder.
+          // The legacy mock fallback does not implement upsert() and may
+          // otherwise silently report success without saving feedback.
+          if (table === "scan_feedback" || table === "ai_answer_feedback") {
+            return target.from(table as keyof TableMap);
+          }
+          return new FallbackQueryBuilder(target, table);
+        };
       }
       return Reflect.get(target, prop, receiver);
     },
