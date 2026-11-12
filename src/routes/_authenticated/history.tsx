@@ -14,6 +14,8 @@ import {
   ShieldCheck,
   Sparkles,
   Trash2,
+  Star,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
@@ -31,6 +33,9 @@ import {
 import { deleteScan, listScans } from "@/lib/scans.functions";
 import { deleteSecurityScan, listSecurityScans } from "@/lib/security-history.functions";
 import { downloadCsv, downloadScanReport } from "@/lib/pdf-report";
+import { downloadSecurityReport } from "@/lib/security-pdf-report";
+import { listScanOrganization, saveScanOrganization } from "@/lib/scan-organization.functions";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/history")({
@@ -73,6 +78,38 @@ function HistoryPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const listOrganization = useServerFn(listScanOrganization);
+  const saveOrganization = useServerFn(saveScanOrganization);
+  const { data: organized = [], isError: orgError } = useQuery({
+    queryKey: ["scan-organization"], queryFn: () => listOrganization(),
+  });
+  const organizationById = useMemo(
+    () => new Map(organized.map((o) => [`${o.scan_type}:${o.scan_id}`, o])),
+    [organized],
+  );
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [editing, setEditing] = useState<{ id: string; type: "email" | "url" | "attachment" } | null>(null);
+  const [editLabel, setEditLabel] = useState("");
+  const [editNote, setEditNote] = useState("");
+  const editEntry = (id: string, type: "email" | "url" | "attachment") => {
+    const old = organizationById.get(`${type}:${id}`);
+    setEditing({ id, type }); setEditLabel(old?.label ?? ""); setEditNote(old?.note ?? "");
+  };
+  const saveMeta = useMutation({
+    mutationFn: (payload: { scanId: string; scanType: "email" | "url" | "attachment"; starred: boolean; label: string; note: string }) =>
+      saveOrganization({ data: payload }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["scan-organization"] });
+      setEditing(null); toast.success("Saved scan organization");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const toggleStar = (id: string, type: "email" | "url" | "attachment") => {
+    const old = organizationById.get(`${type}:${id}`);
+    saveMeta.mutate({ scanId: id, scanType: type, starred: !old?.starred,
+      label: old?.label ?? "", note: old?.note ?? "" });
+  };
+
   const [filter, setFilter] = useState<Filter>("all");
   const [page, setPage] = useState(0);
   const pageSize = 50;
@@ -90,12 +127,12 @@ function HistoryPage() {
 
   const rows = useMemo(
     () =>
-      currentPage.filter((row) =>
-        search.trim()
-          ? `${row.subject} ${row.sender ?? ""}`.toLowerCase().includes(search.toLowerCase())
-          : true,
-      ),
-    [currentPage, search],
+      currentPage.filter((row) => {
+        const meta = organizationById.get(`email:${row.id}`);
+        if (favoritesOnly && !meta?.starred) return false;
+        return !search.trim() || `${row.subject} ${row.sender ?? ""} ${meta?.label ?? ""} ${meta?.note ?? ""}`.toLowerCase().includes(search.toLowerCase());
+      }),
+    [currentPage, search, favoritesOnly, organizationById],
   );
 
   const remove = useMutation({
@@ -148,17 +185,23 @@ function HistoryPage() {
           <h2 className="text-base font-semibold">URL & Attachment History</h2>
           <p className="text-xs text-muted-foreground">Up to 100 latest saved scans, separate from your existing email scans. Attachment file contents are not stored.</p>
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button size="sm" variant={favoritesOnly ? "default" : "outline"} onClick={() => setFavoritesOnly(!favoritesOnly)}>
+            <Star className="size-4" /> {favoritesOnly ? "Showing starred" : "Starred only"}
+          </Button>
+          {orgError && <p role="alert" className="text-sm text-destructive">Could not load bookmarks. Run the scan organization SQL migration.</p>}
+        </div>
         {securityLoading ? <p className="text-sm">Loading saved scans…</p> : securityError ? (
           <p role="alert" className="text-sm text-destructive">{securityLoadError instanceof Error ? securityLoadError.message : "Unable to load security history"}</p>
         ) : securityRows.length === 0 ? <p className="text-sm text-muted-foreground">No URL or attachment scans saved yet. Use “Save to History” in URL Analysis or analyze a new attachment.</p> : (
           <div className="overflow-x-auto"><table className="w-full min-w-[620px] text-left text-sm">
             <thead><tr className="border-b border-border"><th className="py-2">Type</th><th>Target</th><th>Risk</th><th>Date</th><th>Actions</th></tr></thead>
-            <tbody>{securityRows.map((entry) => <tr key={entry.id} className="border-b border-border/50">
+            <tbody>{securityRows.filter((entry) => !favoritesOnly || organizationById.get(`${entry.scan_type}:${entry.id}`)?.starred).map((entry) => <tr key={entry.id} className="border-b border-border/50">
               <td className="py-3 capitalize">{entry.scan_type}</td>
-              <td className="max-w-[240px] truncate font-mono text-xs" title={entry.target}>{entry.target}</td>
+              <td className="max-w-[240px] text-xs"><p className="truncate font-mono" title={entry.target}>{entry.target}</p>{organizationById.get(`${entry.scan_type}:${entry.id}`)?.label && <p className="text-primary">{organizationById.get(`${entry.scan_type}:${entry.id}`)?.label}</p>}</td>
               <td className="capitalize">{entry.risk_level}{entry.risk_score === null ? "" : ` (${entry.risk_score}/100)`}</td>
               <td className="text-xs">{new Date(entry.created_at).toLocaleString()}</td>
-              <td className="space-x-2 whitespace-nowrap"><Button size="sm" variant="outline" onClick={() => {
+              <td className="space-x-2 whitespace-nowrap"><Button size="sm" variant="ghost" title="Toggle bookmark" aria-label="Toggle bookmark" onClick={() => toggleStar(entry.id, entry.scan_type)}><Star className={organizationById.get(`${entry.scan_type}:${entry.id}`)?.starred ? "size-4 fill-current text-amber-500" : "size-4"} /></Button><Button size="sm" variant="outline" onClick={() => editEntry(entry.id, entry.scan_type)}>Organize</Button><Button size="sm" variant="outline" onClick={() => downloadSecurityReport(entry)}>PDF</Button><Button size="sm" variant="outline" onClick={() => {
                 const list = Array.isArray(entry.findings) ? entry.findings.map(String) : [];
                 toast.info(list.length ? list.join("; ").slice(0, 500) : "No warning signs recorded", { duration: 8000 });
               }}>View findings</Button><Button size="sm" variant="outline" onClick={() => setPendingSecurityDelete(entry.id)}>Delete</Button></td>
@@ -241,6 +284,7 @@ function HistoryPage() {
                     >
                       <td className="max-w-[260px] px-4 py-3">
                         <p className="truncate font-medium">{row.subject || "(no subject)"}</p>
+                        {organizationById.get(`email:${row.id}`)?.label && <p className="text-xs text-primary">{organizationById.get(`email:${row.id}`)?.label}</p>}
                       </td>
                       <td className="max-w-[200px] px-4 py-3">
                         <p className="truncate font-mono text-xs text-muted-foreground">
@@ -291,6 +335,14 @@ function HistoryPage() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-1">
+                          <Button size="icon" variant="ghost" aria-label="Toggle bookmark" title="Toggle bookmark"
+                            onClick={(e) => { e.stopPropagation(); toggleStar(row.id, "email"); }}>
+                            <Star className={organizationById.get(`email:${row.id}`)?.starred ? "size-4 fill-current text-amber-500" : "size-4"} />
+                          </Button>
+                          <Button size="icon" variant="ghost" aria-label="Organize scan" title="Edit label and note"
+                            onClick={(e) => { e.stopPropagation(); editEntry(row.id, "email"); }}>
+                            <Pencil className="size-4" />
+                          </Button>
                           <Button
                             size="icon"
                             variant="ghost"
@@ -378,6 +430,30 @@ function HistoryPage() {
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(editing)} onOpenChange={(open) => !open && setEditing(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Organize saved scan</DialogTitle>
+            <DialogDescription>Keep a private label and note for this result in your Supabase account.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <label className="block text-sm font-medium" htmlFor="scan-label">Label / category</label>
+            <Input id="scan-label" maxLength={80} value={editLabel} onChange={(e) => setEditLabel(e.target.value)} placeholder="e.g. Work, Banking, To review" />
+            <label className="block text-sm font-medium" htmlFor="scan-note">Private note</label>
+            <Textarea id="scan-note" maxLength={1000} rows={4} value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Notes for future reference" />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
+              <Button disabled={!editing || saveMeta.isPending} onClick={() => {
+                if (!editing) return;
+                const old = organizationById.get(`${editing.type}:${editing.id}`);
+                saveMeta.mutate({ scanId: editing.id, scanType: editing.type,
+                  starred: old?.starred ?? false, label: editLabel, note: editNote });
+              }}>Save details</Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 

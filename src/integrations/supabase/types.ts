@@ -14,6 +14,43 @@ export type Database = {
   }
   public: {
     Tables: {
+      scan_organization: {
+        Row: {
+          id: string
+          user_id: string
+          scan_id: string
+          scan_type: "email" | "url" | "attachment"
+          starred: boolean
+          label: string
+          note: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          scan_id: string
+          scan_type: "email" | "url" | "attachment"
+          starred?: boolean
+          label?: string
+          note?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          scan_id?: string
+          scan_type?: "email" | "url" | "attachment"
+          starred?: boolean
+          label?: string
+          note?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+
       security_scan_history: {
         Row: {
           id: string
@@ -103,7 +140,6 @@ export type Database = {
       }
       profiles: {
         Row: {
-          display_role: string
           avatar_url: string | null
           created_at: string
           email: string | null
@@ -116,7 +152,6 @@ export type Database = {
           username: string | null
         }
         Insert: {
-          display_role?: string
           avatar_url?: string | null
           created_at?: string
           email?: string | null
@@ -129,7 +164,6 @@ export type Database = {
           username?: string | null
         }
         Update: {
-          display_role?: string
           avatar_url?: string | null
           created_at?: string
           email?: string | null
