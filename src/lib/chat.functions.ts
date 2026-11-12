@@ -68,31 +68,22 @@ export const sendChatMessage = createServerFn({ method: "POST" })
       throw new Error("The assistant is unavailable right now.");
     }
 
-    const now = Date.now();
-    const userMsg = {
-      id: `user-${now}`,
-      user_id: context.userId,
-      role: "user",
-      content: data.message,
-      created_at: new Date(now).toISOString(),
-    };
-    const assistantMsg = {
-      id: `assistant-${now + 1}`,
-      user_id: context.userId,
-      role: "assistant",
-      content: reply,
-      created_at: new Date(now + 1).toISOString(),
-    };
+    // Return actual database IDs, not temporary IDs. Feedback must reference
+    // the precise saved assistant answer and survive query refreshes.
+    const { data: savedMessages, error: saveError } = await context.supabase
+      .from("chat_messages")
+      .insert([
+        { user_id: context.userId, role: "user", content: data.message },
+        { user_id: context.userId, role: "assistant", content: reply },
+      ])
+      .select("id, role, content, created_at");
 
-    const { error: saveError } = await context.supabase.from("chat_messages").insert([
-      { user_id: context.userId, role: "user", content: data.message },
-      { user_id: context.userId, role: "assistant", content: reply },
-    ]);
-
-    if (saveError) {
-      console.error("AI chat save failed", { code: saveError.code, message: saveError.message });
-      throw new Error(`AI answer generated, but could not save chat history: ${saveError.message}`);
+    if (saveError || !savedMessages || savedMessages.length !== 2) {
+      console.error("AI chat save failed", { code: saveError?.code });
+      throw new Error("AI answer generated, but could not save chat history.");
     }
-
-    return { reply, userMessage: userMsg, assistantMessage: assistantMsg };
+    const userMessage = savedMessages.find((message) => message.role === "user");
+    const assistantMessage = savedMessages.find((message) => message.role === "assistant");
+    if (!userMessage || !assistantMessage) throw new Error("Unable to load the saved AI messages.");
+    return { reply, userMessage, assistantMessage };
   });

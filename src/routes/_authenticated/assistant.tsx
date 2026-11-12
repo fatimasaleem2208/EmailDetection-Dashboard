@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { Bot, Loader2, Send, Sparkles, Trash2, UserRound } from "lucide-react";
+import { AiAnswerFeedback } from "@/components/ai-answer-feedback";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -212,7 +213,7 @@ function AssistantPage() {
             )}
 
             {messages.map((message) => (
-              <Bubble key={message.id} role={message.role} content={message.content} />
+              <Bubble key={message.id} role={message.role} content={message.content} messageId={message.id} />
             ))}
             {pendingUser && <Bubble role="user" content={pendingUser} />}
             {mutation.isPending && (
@@ -254,7 +255,7 @@ function AssistantPage() {
   );
 }
 
-function Bubble({ role, content }: { role: string; content: string }) {
+function Bubble({ role, content, messageId }: { role: string; content: string; messageId?: string }) {
   const isUser = role === "user";
   return (
     <div className={cn("flex gap-3", isUser && "flex-row-reverse")}>
@@ -275,6 +276,7 @@ function Bubble({ role, content }: { role: string; content: string }) {
         )}
       >
         <MarkdownLite text={content} />
+        {!isUser && messageId && <AiAnswerFeedback messageId={messageId} />}
       </div>
     </div>
   );
