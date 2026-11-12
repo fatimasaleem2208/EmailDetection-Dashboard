@@ -1,5 +1,5 @@
 import { lookupThreatIntelligence, type ThreatIntelFinding } from "@/lib/threat-intelligence.functions";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { saveSecurityScan } from "@/lib/security-history.functions";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -14,6 +14,7 @@ export const Route = createFileRoute("/_authenticated/attachment-analysis")({
 });
 
 const AI_CONTEXT_KEY = "emaildetection-ai-context-v1";
+const ATTACHMENT_STORAGE_KEY = "emaildetection-attachment-analysis-v1";
 const formatBytes = (bytes: number) => `${(bytes / 1024).toFixed(1)} KB`;
 
 function AttachmentAnalysisPage() {
@@ -28,6 +29,47 @@ function AttachmentAnalysisPage() {
   const [dragging, setDragging] = useState(false);
   const [intel, setIntel] = useState<ThreatIntelFinding | null>(null);
   const [checkingIntel, setCheckingIntel] = useState(false);
+  const [restored, setRestored] = useState(false);
+
+  // Persist only analysis metadata in this browser tab; never persist file bytes.
+  // Wait for restoration before writing, so the initial empty state cannot erase the saved report.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(ATTACHMENT_STORAGE_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw) as {
+          report?: AttachmentReport;
+          intel?: ThreatIntelFinding | null;
+          historyNote?: string;
+        };
+        const previous = saved?.report;
+        if (previous && typeof previous.name === "string" &&
+            typeof previous.sha256 === "string" && Array.isArray(previous.findings) &&
+            typeof previous.size === "number" && typeof previous.status === "string") {
+          setReport(previous);
+          setIntel(saved.intel ?? null);
+          setHistoryNote(typeof saved.historyNote === "string" ? saved.historyNote : "");
+        }
+      }
+    } catch {
+      // Ignore browser-storage errors without interfering with a fresh scan.
+    } finally {
+      setRestored(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!restored) return;
+    try {
+      if (!report) {
+        sessionStorage.removeItem(ATTACHMENT_STORAGE_KEY);
+      } else {
+        sessionStorage.setItem(ATTACHMENT_STORAGE_KEY, JSON.stringify({ report, intel, historyNote }));
+      }
+    } catch {
+      // Browser storage might be disabled or full; analysis still works in the current view.
+    }
+  }, [restored, report, intel, historyNote]);
 
   function chooseFile(file?: File) {
     setReport(null);
@@ -68,6 +110,7 @@ function AttachmentAnalysisPage() {
   }
 
   function reset() {
+    try { sessionStorage.removeItem(ATTACHMENT_STORAGE_KEY); } catch { /* unavailable */ }
     setReport(null); setIntel(null); setSelected(null); setError(""); setDragging(false); setHistoryNote("");
     if (inputRef.current) inputRef.current.value = "";
   }
@@ -130,6 +173,11 @@ function AttachmentAnalysisPage() {
           <input ref={inputRef} aria-label="Select attachment" type="file" className="hidden" onChange={(e) => { chooseFile(e.target.files?.[0]); e.target.value = ""; }} />
         </div>
         {selected && <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3"><FileUp className="size-5 shrink-0" /><div className="min-w-0 flex-1"><p className="break-all text-sm font-medium">{selected.name}</p><p className="text-xs text-muted-foreground">{formatBytes(selected.size)} selected</p></div></div>}
+        {!selected && report && (
+          <p role="status" className="text-xs text-muted-foreground">
+            Saved inspection for {report.name} restored. Original file bytes were not retained. Select the file again only if you want to rescan it.
+          </p>
+        )}
         <div className="flex flex-wrap gap-3">
           <Button disabled={!selected || busy} onClick={analyze}><FileSearch className="mr-2 size-4" />{busy ? "Inspecting…" : "Analyze Attachment"}</Button>
           <Button variant="outline" disabled={busy || (!selected && !report)} onClick={reset}><Trash2 className="mr-2 size-4" />Remove</Button>
