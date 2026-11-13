@@ -34,6 +34,7 @@ import { deleteScan, listScans } from "@/lib/scans.functions";
 import { deleteSecurityScan, listSecurityScans } from "@/lib/security-history.functions";
 import { downloadCsv, downloadScanReport } from "@/lib/pdf-report";
 import { downloadSecurityReport } from "@/lib/security-pdf-report";
+import { getScanAuditTrail } from "@/lib/scan-audit.functions";
 import { listScanOrganization, saveScanOrganization } from "@/lib/scan-organization.functions";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -62,6 +63,14 @@ export const Route = createFileRoute("/_authenticated/history")({
 type Filter = "all" | "phishing" | "legitimate";
 
 function HistoryPage() {
+  const [auditSelection, setAuditSelection] = useState<{ id: string; type: "email" | "url" | "attachment" } | null>(null);
+  const fetchAudit = useServerFn(getScanAuditTrail);
+  const { data: auditEvents = [], isLoading: auditLoading, isError: auditError } = useQuery({
+    queryKey: ["scan-audit", auditSelection?.type, auditSelection?.id],
+    queryFn: () => fetchAudit({ data: { scanId: auditSelection!.id, scanType: auditSelection!.type } }),
+    enabled: Boolean(auditSelection),
+  });
+  const openAudit = (id: string, type: "email" | "url" | "attachment") => setAuditSelection({ id, type });
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const fetchScans = useServerFn(listScans);
@@ -204,7 +213,7 @@ function HistoryPage() {
               <td className="space-x-2 whitespace-nowrap"><Button size="sm" variant="ghost" title="Toggle bookmark" aria-label="Toggle bookmark" onClick={() => toggleStar(entry.id, entry.scan_type)}><Star className={organizationById.get(`${entry.scan_type}:${entry.id}`)?.starred ? "size-4 fill-current text-amber-500" : "size-4"} /></Button><Button size="sm" variant="outline" onClick={() => editEntry(entry.id, entry.scan_type)}>Organize</Button><Button size="sm" variant="outline" onClick={() => downloadSecurityReport(entry)}>PDF</Button><Button size="sm" variant="outline" onClick={() => {
                 const list = Array.isArray(entry.findings) ? entry.findings.map(String) : [];
                 toast.info(list.length ? list.join("; ").slice(0, 500) : "No warning signs recorded", { duration: 8000 });
-              }}>View findings</Button><Button size="sm" variant="outline" onClick={() => setPendingSecurityDelete(entry.id)}>Delete</Button></td>
+              }}>View findings</Button><Button size="sm" variant="outline" onClick={() => openAudit(entry.id, entry.scan_type)}>Audit Trail</Button><Button size="sm" variant="outline" onClick={() => setPendingSecurityDelete(entry.id)}>Delete</Button></td>
             </tr>)}</tbody>
           </table></div>
         )}
@@ -354,6 +363,10 @@ function HistoryPage() {
                           >
                             <FileDown className="size-4" />
                           </Button>
+                           <Button size="sm" variant="outline" aria-label="View scan audit trail"
+                             onClick={(e) => { e.stopPropagation(); openAudit(row.id, "email"); }}>
+                             Audit
+                           </Button>
                           <Button
                             size="icon"
                             variant="ghost"
@@ -407,6 +420,9 @@ function HistoryPage() {
                 }
               />
               <div className="flex flex-wrap justify-end gap-2 pt-2">
+                <Button variant="outline" size="sm" onClick={() => openAudit(selected.id, "email")}>
+                  View Audit Trail
+                </Button>
                 <Button variant="outline" size="sm" onClick={() => reopenInScanner(selected)}>
                   <RotateCcw className="size-4" /> Reopen in scanner
                 </Button>
@@ -429,6 +445,38 @@ function HistoryPage() {
                 </Button>
               </div>
             </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(auditSelection)} onOpenChange={(open) => !open && setAuditSelection(null)}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Scan Audit Trail</DialogTitle>
+            <DialogDescription>
+              Recorded server-side events for this saved {auditSelection?.type} scan. Older scans may not have events.
+            </DialogDescription>
+          </DialogHeader>
+          {auditLoading ? <p className="text-sm">Loading audit events…</p> : auditError ? (
+            <p role="alert" className="text-sm text-destructive">Audit events could not be loaded. Check the audit SQL migration.</p>
+          ) : auditEvents.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No audit records exist for this scan. Events begin after installing this update.</p>
+          ) : (
+            <ol className="space-y-3 border-l border-border pl-4">
+              {auditEvents.map((event) => (
+                <li key={event.id} className="space-y-1 text-sm">
+                  <p className="font-medium">{event.event_type === "result_saved" ? "Result saved" : event.event_type === "analysis_summary" ? "Analysis summary recorded" : "Scan deleted"}</p>
+                  <p className="text-xs text-muted-foreground">{new Date(event.created_at).toLocaleString()}</p>
+                  {event.details && typeof event.details === "object" && !Array.isArray(event.details) && (
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                      {Object.entries(event.details).map(([name, value]) => (
+                        <span key={name}>{name.replace(/_/g, " ")}: {String(value)}</span>
+                      ))}
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ol>
           )}
         </DialogContent>
       </Dialog>

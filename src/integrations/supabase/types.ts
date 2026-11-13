@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      scan_audit_events: {
+        Row: {
+          id: string
+          user_id: string
+          scan_id: string
+          scan_type: "email" | "url" | "attachment"
+          event_type: "result_saved" | "analysis_summary" | "scan_deleted"
+          details: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          scan_id: string
+          scan_type: "email" | "url" | "attachment"
+          event_type: "result_saved" | "analysis_summary" | "scan_deleted"
+          details?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          scan_id?: string
+          scan_type?: "email" | "url" | "attachment"
+          event_type?: "result_saved" | "analysis_summary" | "scan_deleted"
+          details?: Json
+          created_at?: string
+        }
+        Relationships: []
+      }
       scan_organization: {
         Row: {
           id: string

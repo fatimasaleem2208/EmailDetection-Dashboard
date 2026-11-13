@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { recordScanAudit } from "@/lib/scan-audit.functions";
 import type { Json } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
@@ -54,6 +55,17 @@ export const analyzeAndSaveScan = createServerFn({ method: "POST" })
       throw new Error("Could not save the scan result.");
     }
 
+    await recordScanAudit(context.supabase, context.userId, row.id, "email", "result_saved", {
+      source: data.source,
+    });
+    await recordScanAudit(context.supabase, context.userId, row.id, "email", "analysis_summary", {
+      verdict: result.verdict,
+      risk_score: result.riskScore,
+      indicator_count: result.indicators.length,
+      url_count: result.urls.length,
+      ai_explanation_available: aiText !== null,
+    });
+
     await context.supabase.from("activity_logs").insert({
       user_id: context.userId,
       action: "email_scanned",
@@ -106,6 +118,7 @@ export const deleteScan = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .eq("user_id", context.userId);
     if (error) throw new Error("Could not delete that scan.");
+    await recordScanAudit(context.supabase, context.userId, data.id, "email", "scan_deleted");
     await context.supabase.from("activity_logs").insert({
       user_id: context.userId,
       action: "scan_deleted",
@@ -144,12 +157,11 @@ export const getDashboardData = createServerFn({ method: "GET" })
 export const getActivityLogs = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase
+    const { data } = await context.supabase
       .from("activity_logs")
       .select("*")
       .eq("user_id", context.userId)
       .order("created_at", { ascending: false })
       .limit(100);
-    if (error) throw new Error(`Could not load activity logs: ${error.message}`);
     return data ?? [];
   });

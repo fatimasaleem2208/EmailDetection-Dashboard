@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { recordScanAudit } from "@/lib/scan-audit.functions";
 import { z } from "zod";
 import type { Json } from "@/integrations/supabase/types";
 import { MOCK_USER_ID } from "@/integrations/supabase/mock";
@@ -35,6 +36,12 @@ export const saveSecurityScan = createServerFn({ method: "POST" })
         details: data.details as Json,
       }).select("*").single();
     if (error || !row) throw new Error("Could not save this scan. Check the Phase 5.1 SQL migration and authentication.");
+    await recordScanAudit(context.supabase, context.userId, row.id, data.scanType, "result_saved");
+    await recordScanAudit(context.supabase, context.userId, row.id, data.scanType, "analysis_summary", {
+      risk_level: data.riskLevel,
+      risk_score: data.riskScore,
+      finding_count: data.findings.length,
+    });
     await context.supabase.from("activity_logs").insert({
       user_id: context.userId,
       action: `${data.scanType}_scanned`,
@@ -60,8 +67,13 @@ export const deleteSecurityScan = createServerFn({ method: "POST" })
   .validator((input: unknown) => idSchema.parse(input))
   .handler(async ({ data, context }) => {
     requireRealUser(context.userId);
+    const { data: existing } = await context.supabase.from("security_scan_history")
+      .select("scan_type").eq("id", data.id).eq("user_id", context.userId).maybeSingle();
     const { error } = await context.supabase.from("security_scan_history")
       .delete().eq("id", data.id).eq("user_id", context.userId);
     if (error) throw new Error("Unable to delete history entry.");
+    if (existing?.scan_type === "url" || existing?.scan_type === "attachment") {
+      await recordScanAudit(context.supabase, context.userId, data.id, existing.scan_type, "scan_deleted");
+    }
     return { ok: true };
   });
