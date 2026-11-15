@@ -133,6 +133,34 @@ function ScannerPage() {
     } catch { /* Storage may be disabled or full. */ }
   }, [restored, subject, sender, body, useAi, source, result]);
 
+  // Receive the currently opened Gmail message from our installed Chrome extension.
+  // The extension sends data only after the user explicitly clicks Quick Scan.
+  // We never place message contents in a query string or automatically start a scan.
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get("gmail_import");
+    if (!token || !restored) return;
+    const handleImport = (event: MessageEvent) => {
+      if (event.source !== window || event.origin !== window.location.origin) return;
+      const packet = event.data as {type?: string; token?: string; email?: {subject?: unknown;sender?: unknown;body?: unknown};error?: string};
+      if (packet?.type !== "EMAILDETECTION_GMAIL_IMPORT" || packet.token !== token) return;
+      const email = packet.email;
+      if (email && typeof email.body === "string" && email.body.trim().length >= 10 && email.body.length <= 120000) {
+        setSubject(typeof email.subject === "string" ? email.subject.slice(0, 500) : "");
+        setSender(typeof email.sender === "string" ? email.sender.slice(0, 500) : "");
+        setBody(email.body);
+        setSource("manual");
+        setResult(null);
+        toast.success("Gmail message imported. Review it, then click Analyze email.");
+      } else {
+        toast.error(packet.error || "No readable Gmail message was imported. Open the extension again.");
+      }
+      window.history.replaceState(window.history.state, "", window.location.pathname);
+    };
+    window.addEventListener("message", handleImport);
+    window.postMessage({ type: "EMAILDETECTION_SCANNER_READY" }, window.location.origin);
+    return () => window.removeEventListener("message", handleImport);
+  }, [restored]);
+
   const preview = body.trim().length > 20 ? analyzeEmail({ subject, body, sender }) : null;
 
   const mutation = useMutation({

@@ -1,7 +1,7 @@
 "use strict";
 const $ = (id) => document.getElementById(id);
 let currentURL = null;
-let appAddress = "http://localhost:3000";
+let appAddress = "https://emaildetection-dashboard.vercel.app";
 
 function inspect(raw) {
   const url = new URL(raw);
@@ -42,10 +42,11 @@ function showResult(data) {
 }
 async function init() {
   const stored = await chrome.storage.local.get('appAddress');
-  if (typeof stored.appAddress === 'string') appAddress = stored.appAddress;
+  if (typeof stored.appAddress === 'string' && stored.appAddress !== 'http://localhost:3000') appAddress = stored.appAddress;
   $('app-base').value = appAddress;
   const tabs = await chrome.tabs.query({ active:true, currentWindow:true });
   const tabURL = tabs?.[0]?.url;
+  if (tabURL?.startsWith('https://mail.google.com/')) $('gmail-section').hidden = false;
   try {
     if (!tabURL) throw new Error('No URL available');
     const parsed = new URL(tabURL);
@@ -82,3 +83,26 @@ $('save-base').addEventListener('click', async () => {
   } catch { $('setting-note').textContent='Use a valid HTTPS address or http://localhost:3000.'; }
 });
 init().catch(() => { $('target').textContent='Unable to read current tab.'; });
+
+$('gmail-analyze').addEventListener('click', async () => {
+  const status = $('gmail-status');
+  const btn = $('gmail-analyze');
+  btn.disabled = true;
+  status.textContent = 'Reading the selected Gmail message…';
+  try {
+    const [tab] = await chrome.tabs.query({active:true,currentWindow:true});
+    if (!tab?.id || !tab.url?.startsWith('https://mail.google.com/')) throw Error('Open Gmail in the active tab.');
+    const [read] = await chrome.scripting.executeScript({target:{tabId:tab.id},files:['gmail-reader.js']});
+    const email = read?.result;
+    if (!email || email.error) throw Error(email?.error || 'No expanded email found.');
+    const url = new URL(appAddress);
+    if (url.origin !== 'https://emaildetection-dashboard.vercel.app') throw Error('Gmail Quick Scan requires the live EmailDetection site in App address settings.');
+    const response = await chrome.runtime.sendMessage({type:'ED_STORE_GMAIL',email});
+    if (!response?.token) throw Error(response?.error || 'Unable to prepare the import.');
+    const scanner = new URL('/scanner',url);
+    scanner.searchParams.set('gmail_import',response.token); // The URL holds only a random identifier, NEVER email contents.
+    await chrome.tabs.create({url:scanner.toString()});
+    status.textContent = 'Opening EmailDetection. Review the imported message and click Analyze email.';
+  } catch(err) { status.textContent = err?.message || 'Unable to import this email.'; }
+  finally { btn.disabled = false; }
+});

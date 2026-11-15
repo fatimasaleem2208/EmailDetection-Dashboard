@@ -1,15 +1,16 @@
 {
   "manifest_version": 3,
-  "name": "EmailDetection \u2014 URL Check",
-  "version": "0.1.0",
-  "description": "Check the current website URL for phishing warning signs, then open it in your EmailDetection app.",
+  "name": "EmailDetection \u2014 URL & Gmail Quick Scan",
+  "version": "0.3.0",
+  "description": "Check website URLs and manually analyze a selected open Gmail message using EmailDetection.",
   "permissions": [
     "activeTab",
+    "scripting",
     "storage"
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Check this URL with EmailDetection",
+    "default_title": "EmailDetection \u2014 URL & Gmail Quick Scan",
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png"
@@ -20,5 +21,19 @@
     "32": "icons/icon32.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
-  }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://emaildetection-dashboard.vercel.app/*"
+      ],
+      "js": [
+        "app-bridge.js"
+      ],
+      "run_at": "document_start"
+    }
+  ]
 }
